@@ -5,6 +5,10 @@ import 'package:flutter/material.dart';
 
 import 'bar.dart';
 
+// Based on Article below
+// Part 1: https://medium.com/flutter-io/zero-to-one-with-flutter-43b13fd7b354
+// Part 2: https://medium.com/flutter-io/zero-to-one-with-flutter-part-two-5aa2f06655cb
+
 void main() {
   runApp(new MaterialApp(home: new ChartPage()));
 }
@@ -15,7 +19,7 @@ class ChartPage extends StatefulWidget {
 }
 
 class ChartPageState extends State<ChartPage> with TickerProviderStateMixin {
-  static const size = const Size(200.0, 100.0);
+  static const size = const Size(400.0, 150.0);
   final random = new Random();
   AnimationController animation;
   BarChartTween tween;
