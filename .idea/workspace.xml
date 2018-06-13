@@ -2,8 +2,6 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e60881e5-c741-4f21-a680-8c4106dcd2cc" name="Default" comment="">
-      <change beforePath="" afterPath="$PROJECT_DIR$/lib/tween.dart" />
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change beforePath="$PROJECT_DIR$/lib/bar.dart" afterPath="$PROJECT_DIR$/lib/bar.dart" />
     </list>
     <ignored path="$PROJECT_DIR$/.dart_tool/" />
@@ -34,8 +32,8 @@
       <file leaf-file-name="bar.dart" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/lib/bar.dart">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="255">
-              <caret line="15" column="0" lean-forward="true" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
+            <state relative-caret-position="552">
+              <caret line="173" column="1" lean-forward="false" selection-start-line="173" selection-start-column="1" selection-end-line="173" selection-end-column="1" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
               </folding>
@@ -77,8 +75,8 @@
       <list>
         <option value="$PROJECT_DIR$/lib/color_pallette.dart" />
         <option value="$PROJECT_DIR$/lib/main.dart" />
-        <option value="$PROJECT_DIR$/lib/bar.dart" />
         <option value="$PROJECT_DIR$/lib/tween.dart" />
+        <option value="$PROJECT_DIR$/lib/bar.dart" />
       </list>
     </option>
   </component>
@@ -334,8 +332,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/lib/bar.dart">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="0" lean-forward="true" selection-start-line="15" selection-start-column="0" selection-end-line="15" selection-end-column="0" />
+        <state relative-caret-position="552">
+          <caret line="173" column="1" lean-forward="false" selection-start-line="173" selection-start-column="1" selection-end-line="173" selection-end-column="1" />
           <folding>
             <element signature="e#0#19#0" expanded="true" />
           </folding>
