@@ -5,38 +5,50 @@ import 'package:flutter/animation.dart';
 import 'package:flutter/material.dart';
 
 import 'color_palette.dart';
+import 'tween.dart';
 
 class BarChart {
-  BarChart(this.bars);
+  BarChart(this.stacks);
 
   factory BarChart.empty(Size size) {
-    return new BarChart(<Bar>[]);
+    return new BarChart(<BarStack>[]);
   }
 
   factory BarChart.random(Size size, Random random) {
-    const barWidthFraction = 0.75;
-    final ranks = selectRanks(random, ColorPalette.primary.length);
-    final barCount = ranks.length;
-    final barDistance = size.width / (1 + barCount);
-    final barWidth = barDistance * barWidthFraction;
-    final startX = barDistance - barWidth / 2;
-    final bars = new List.generate(
-        barCount,
-            (i) => new Bar(
-          ranks[i],
-          startX + i * barDistance,
-          barWidth,
-          random.nextDouble() * size.height,
-          ColorPalette.primary[ranks[i]],
-        ));
-    return new BarChart(bars);
+    const stackWidthFraction = 0.75;
+    final stackRanks = _selectRanks(random, 10);
+    final stackCount = stackRanks.length;
+    final stackDistance = size.width / (1 + stackCount);
+    final stackWidth = stackDistance * stackWidthFraction;
+    final startX = stackDistance - stackWidth / 2;
+    final stacks = new List.generate(
+      stackCount,
+          (i) {
+        final barRanks = _selectRanks(random, ColorPalette.primary.length ~/ 2);
+        final bars = new List.generate(
+          barRanks.length,
+              (j) => new Bar(
+            barRanks[j],
+            random.nextDouble() * size.height / 2,
+            ColorPalette.primary[barRanks[j]],
+          ),
+        );
+        return new BarStack(
+          stackRanks[i],
+          startX + i * stackDistance,
+          stackWidth,
+          bars,
+        );
+      },
+    );
+    return new BarChart(stacks);
   }
 
-  static List<int> selectRanks(Random random, int cap) {
+  static List<int> _selectRanks(Random random, int cap) {
     final ranks = <int>[];
     var rank = 0;
     while (true) {
-      if (random.nextDouble() < 0.2) rank++;
+      rank += random.nextInt(2);
       if (cap <= rank) break;
       ranks.add(rank);
       rank++;
@@ -44,57 +56,76 @@ class BarChart {
     return ranks;
   }
 
-  final List<Bar> bars;
-
-  static BarChart lerp(BarChart begin, BarChart end, double t) {
-    final bars = <Bar>[];
-    final bMax = begin.bars.length;
-    final eMax = end.bars.length;
-    var b = 0;
-    var e = 0;
-    while (b + e < bMax + eMax) {
-      if (b < bMax && (e == eMax || begin.bars[b] < end.bars[e])) {
-        bars.add(Bar.lerp(begin.bars[b], begin.bars[b].collapsed, t));
-        b++;
-      } else if (e < eMax && (b == bMax || end.bars[e] < begin.bars[b])) {
-        bars.add(Bar.lerp(end.bars[e].collapsed, end.bars[e], t));
-        e++;
-      } else {
-        bars.add(Bar.lerp(begin.bars[b], end.bars[e], t));
-        b++;
-        e++;
-      }
-    }
-    return new BarChart(bars);
-  }
+  final List<BarStack> stacks;
 }
 
 class BarChartTween extends Tween<BarChart> {
-  BarChartTween(BarChart begin, BarChart end) : super(begin: begin, end: end);
+  BarChartTween(BarChart begin, BarChart end)
+      : _stacksTween = new MergeTween<BarStack>(begin.stacks, end.stacks),
+        super(begin: begin, end: end);
+
+  final MergeTween<BarStack> _stacksTween;
 
   @override
-  BarChart lerp(double t) => BarChart.lerp(begin, end, t);
+  BarChart lerp(double t) => new BarChart(_stacksTween.lerp(t));
 }
 
-class Bar {
-  Bar(this.rank, this.x, this.width, this.height, this.color);
+class BarStack implements MergeTweenable<BarStack> {
+  BarStack(this.rank, this.x, this.width, this.bars);
 
   final int rank;
   final double x;
   final double width;
+  final List<Bar> bars;
+
+  @override
+  BarStack get empty => new BarStack(rank, x, 0.0, <Bar>[]);
+
+  @override
+  bool operator <(BarStack other) => rank < other.rank;
+
+  @override
+  Tween<BarStack> tweenTo(BarStack other) => new BarStackTween(this, other);
+}
+
+class BarStackTween extends Tween<BarStack> {
+  BarStackTween(BarStack begin, BarStack end)
+      : _barsTween = new MergeTween<Bar>(begin.bars, end.bars),
+        super(begin: begin, end: end) {
+    assert(begin.rank == end.rank);
+  }
+
+  final MergeTween<Bar> _barsTween;
+
+  @override
+  BarStack lerp(double t) => new BarStack(
+    begin.rank,
+    lerpDouble(begin.x, end.x, t),
+    lerpDouble(begin.width, end.width, t),
+    _barsTween.lerp(t),
+  );
+}
+
+class Bar extends MergeTweenable<Bar> {
+  Bar(this.rank, this.height, this.color);
+
+  final int rank;
   final double height;
   final Color color;
 
-  Bar get collapsed => new Bar(rank, x, 0.0, 0.0, color);
+  @override
+  Bar get empty => new Bar(rank, 0.0, color);
 
+  @override
   bool operator <(Bar other) => rank < other.rank;
+
+  @override
+  Tween<Bar> tweenTo(Bar other) => new BarTween(this, other);
 
   static Bar lerp(Bar begin, Bar end, double t) {
     assert(begin.rank == end.rank);
     return new Bar(
       begin.rank,
-      lerpDouble(begin.x, end.x, t),
-      lerpDouble(begin.width, end.width, t),
       lerpDouble(begin.height, end.height, t),
       Color.lerp(begin.color, end.color, t),
     );
@@ -119,19 +150,34 @@ class BarChartPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = new Paint()..style = PaintingStyle.fill;
+    final barPaint = new Paint()..style = PaintingStyle.fill;
+    final linePaint = new Paint()
+      ..style = PaintingStyle.stroke
+      ..color = Colors.white
+      ..strokeWidth = 1.0;
+    final linePath = new Path();
     final chart = animation.value;
-    for (final bar in chart.bars) {
-      paint.color = bar.color;
-      canvas.drawRect(
-        new Rect.fromLTWH(
-          bar.x,
-          size.height - bar.height,
-          bar.width,
-          bar.height,
-        ),
-        paint,
-      );
+    for (final stack in chart.stacks) {
+      var y = size.height;
+      for (final bar in stack.bars) {
+        barPaint.color = bar.color;
+        canvas.drawRect(
+          new Rect.fromLTWH(
+            stack.x,
+            y - bar.height,
+            stack.width,
+            bar.height,
+          ),
+          barPaint,
+        );
+        if (y < size.height) {
+          linePath.moveTo(stack.x, y);
+          linePath.lineTo(stack.x + stack.width, y);
+        }
+        y -= bar.height;
+      }
+      canvas.drawPath(linePath, linePaint);
+      linePath.reset();
     }
   }
 
